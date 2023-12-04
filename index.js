@@ -1,14 +1,15 @@
 import { CompreFace } from '@exadel/compreface-js-sdk';
 import express from 'express';
+import sharp from 'sharp'; // test
 
-let api_key = "faf6f6c3-7700-4a2d-bda1-6e03440864f1";
+let api_key = "215bfb53-fd99-4a45-9b94-43775588bbce";
 let url = "http://localhost";
 let portCF = 8000;
 let options = {
-  limit: 0, 
-  det_prob_threshold: 0.8, 
+  limit: 0,
+  det_prob_threshold: 0.8,
   prediction_count: 1,
-  face_plugins: "calculator,age,gender,landmarks",
+  face_plugins: "age,gender,landmarks",
   status: "true"
 }
 
@@ -18,7 +19,7 @@ let faceCollection = recognitionService.getFaceCollection(); // use face collect
 let subjects = recognitionService.getSubjects(); // use subjects object to work with subjects directely
 
 const app = express()
-const port = 3000
+const port = 4000
 
 app.get('/', (req, res) => {
   let path_to_image = "./images/boy.jpg";
@@ -32,15 +33,23 @@ app.get('/', (req, res) => {
   //   .catch(error => {
   //     console.log(`Oops! There is problem in uploading image ${error}`)
   //   })
-  recognitionService.recognize(path_to_image, options)
-    .then(response => {
-        console.log(JSON.stringify(response));
-    })
-    .catch(error => {
+  // sharp(path_to_image)
+  // .resize({ height: 800 })
+  // .toFile('output.jpg')
+  // .then(data => {
+  //   console.log(data)
+    // 800 pixels high, auto-scaled width
+    recognitionService.recognize(data, options)
+      .then(response => {
+        res.send(response)
+      })
+      .catch(error => {
+        res.send(error)
         console.log(`Oops! There is problem with recognizing image ${error}`)
-    })
-  res.send('Hello World!')
-})
+      })
+  });
+  // res.send('Hello World!')
+// })
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
