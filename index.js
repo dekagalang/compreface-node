@@ -1,8 +1,15 @@
 import { CompreFace } from '@exadel/compreface-js-sdk';
 import express from 'express';
+import fileUpload from 'express-fileupload';
 import sharp from 'sharp'; // test
 
-let api_key = "215bfb53-fd99-4a45-9b94-43775588bbce";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+let api_key = "fa176a2b-00c7-444e-bec4-df055c97beb2";
 let url = "http://localhost";
 let portCF = 8000;
 let options = {
@@ -21,10 +28,30 @@ let subjects = recognitionService.getSubjects(); // use subjects object to work 
 const app = express()
 const port = 4000
 
-app.get('/', (req, res) => {
-  let path_to_image = "./images/boy.jpg";
+app.use(fileUpload());
+
+app.post('/', async (req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  let path_to_image = "./images/taylor.webp";
   let path_to_image_group = "./images/group.jpg";
   let name = encodeURIComponent('tom');
+
+  const { image } = req.files;
+
+  // If no image submitted, exit
+  if (!image) return res.sendStatus(400);
+
+  // If does not have image mime type prevent from uploading
+  if (!/^image/.test(image.mimetype)) return res.sendStatus(400);
+
+  // Move the uploaded image to our upload folder
+  await image.mv(__dirname + '/upload/' + image.name);
+
+  // All good
+  // res.sendStatus(200);
 
   // faceCollection.add(path_to_image, name)
   //   .then(response => {
@@ -38,17 +65,18 @@ app.get('/', (req, res) => {
   // .toFile('output.jpg')
   // .then(data => {
   //   console.log(data)
-    // 800 pixels high, auto-scaled width
-    recognitionService.recognize(data, options)
-      .then(response => {
-        res.send(response)
-      })
-      .catch(error => {
-        res.send(error)
-        console.log(`Oops! There is problem with recognizing image ${error}`)
-      })
-  });
-  // res.send('Hello World!')
+  // 800 pixels high, auto-scaled width
+
+  recognitionService.recognize('./upload/' + image.name, options)
+    .then(response => {
+      res.send(response)
+    })
+    .catch(error => {
+      res.send(error)
+      console.log(`Oops! There is problem with recognizing image ${error}`)
+    })
+});
+// res.send('Hello World!')
 // })
 
 app.listen(port, () => {
