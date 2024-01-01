@@ -9,7 +9,7 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-let api_key = "fa176a2b-00c7-444e-bec4-df055c97beb2";
+let api_key = "49325014-87c1-4c72-a3a5-20d86431f16c";
 let url = "http://localhost";
 let portCF = 8000;
 let options = {
@@ -39,7 +39,10 @@ app.post('/', async (req, res, next) => {
   let path_to_image_group = "./images/group.jpg";
   let name = encodeURIComponent('tom');
 
-  const { image } = req.files;
+  const { files, body } = req;
+  const { width } = body;
+  const { image } = files;
+  console.log(width)
 
   // If no image submitted, exit
   if (!image) return res.sendStatus(400);
@@ -60,22 +63,24 @@ app.post('/', async (req, res, next) => {
   //   .catch(error => {
   //     console.log(`Oops! There is problem in uploading image ${error}`)
   //   })
-  // sharp(path_to_image)
-  // .resize({ height: 800 })
-  // .toFile('output.jpg')
-  // .then(data => {
-  //   console.log(data)
+  sharp(__dirname + '/upload/' + image.name)
+  .resize({ width: Math.round(width) })
+  .toFile(__dirname + '/upload/output.jpg')
+  .then(data => {
+    // console.log(data)
+    recognitionService.recognize('./upload/output.jpg', options)
+      .then(response => {
+        console.log(response.result)
+        res.send(response.result)
+      })
+      .catch(error => {
+        res.send(error)
+        console.log(`Oops! There is problem with recognizing image ${error}`)
+      })
+  });
+  })
   // 800 pixels high, auto-scaled width
 
-  recognitionService.recognize('./upload/' + image.name, options)
-    .then(response => {
-      res.send(response)
-    })
-    .catch(error => {
-      res.send(error)
-      console.log(`Oops! There is problem with recognizing image ${error}`)
-    })
-});
 // res.send('Hello World!')
 // })
 
